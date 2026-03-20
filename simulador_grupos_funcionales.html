@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador · Grupos Funcionales · CBI 103</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #E87722;
+    --dark-blue: #1B3A6B;
+    --bg: #F2F4F7;
+    --card: #FFFFFF;
+    --border: #E0E0E0;
+    --text: #1C1C1C;
+    --muted: #666666;
+    --green-bg: #E1F5EE;
+    --green-text: #0F6E56;
+    --red-bg: #FAECE7;
+    --red-text: #993C1D;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --c1-bg:#FFF3E8; --c1-bd:#E87722; --c1-dot:#E87722;
+    --c2-bg:#FFF8E1; --c2-bd:#F5A800; --c2-dot:#F5A800;
+    --c3-bg:#F3ECFF; --c3-bd:#8B3DC8; --c3-dot:#8B3DC8;
+    --c4-bg:#E8F3FF; --c4-bd:#2563EB; --c4-dot:#2563EB;
+    --c5-bg:#EAFAF2; --c5-bd:#16A34A; --c5-dot:#16A34A;
+    --c6-bg:#FDF2FF; --c6-bd:#C026D3; --c6-dot:#C026D3;
+  }
+
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header { background: var(--dark-blue); padding: 0.9rem 1.25rem; display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 10; }
+  .hbadge { background: var(--orange); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .05em; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  header h1 { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.3; }
+  header p  { color: #8EB4D8; font-size: 11px; margin-top: 1px; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+  /* Legend */
+  .legend { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: .85rem 1rem; margin-bottom: 1.25rem; }
+  .legend-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .legend-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+  @media(max-width:420px){ .legend-grid { grid-template-columns: repeat(2,1fr); } }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .ldot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Step labels */
+  .step-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; margin-top: 1.4rem; }
+  .step-num { background: var(--dark-blue); color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-text { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  /* Sample buttons */
+  .sample-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  @media(max-width:400px){ .sample-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .btn-sample {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 8px 9px 13px; cursor: pointer; text-align: left;
+    transition: border-color .15s, background .15s, opacity .15s, transform .1s;
+    -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden;
+  }
+  .btn-sample::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--border); transition: background .15s; }
+  .btn-sample:active { transform: scale(.97); }
+
+  .btn-sample.f1{border-color:var(--c1-bd);background:var(--c1-bg)} .btn-sample.f1::before{background:var(--c1-dot)}
+  .btn-sample.f2{border-color:var(--c2-bd);background:var(--c2-bg)} .btn-sample.f2::before{background:var(--c2-dot)}
+  .btn-sample.f3{border-color:var(--c3-bd);background:var(--c3-bg)} .btn-sample.f3::before{background:var(--c3-dot)}
+  .btn-sample.f4{border-color:var(--c4-bd);background:var(--c4-bg)} .btn-sample.f4::before{background:var(--c4-dot)}
+  .btn-sample.f5{border-color:var(--c5-bd);background:var(--c5-bg)} .btn-sample.f5::before{background:var(--c5-dot)}
+  .btn-sample.f6{border-color:var(--c6-bd);background:var(--c6-bg)} .btn-sample.f6::before{background:var(--c6-dot)}
+
+  .btn-sample.active  { outline: 2.5px solid var(--dark-blue); outline-offset: 1px; }
+  .btn-sample.dimmed  { opacity: .28; }
+
+  .sname { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+  .ssub  { font-size: 10px; color: var(--muted); line-height: 1.3; }
+
+  /* Reactivo buttons */
+  .reactivo-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+  @media(min-width:500px){ .reactivo-grid { grid-template-columns: repeat(3,1fr); } }
+
+  .btn-reactivo {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 20px 9px 8px; cursor: pointer; text-align: center;
+    transition: border-color .15s, background .15s, opacity .15s, transform .1s;
+    -webkit-tap-highlight-color: transparent; position: relative;
+  }
+  /* color dot — top right */
+  .btn-reactivo::after { content:""; position:absolute; top:7px; right:8px; width:9px; height:9px; border-radius:50%; background:var(--border); transition: background .15s; }
+  .btn-reactivo:active { transform: scale(.97); }
+
+  .btn-reactivo.f1{border-color:var(--c1-bd);background:var(--c1-bg)} .btn-reactivo.f1::after{background:var(--c1-dot)}
+  .btn-reactivo.f2{border-color:var(--c2-bd);background:var(--c2-bg)} .btn-reactivo.f2::after{background:var(--c2-dot)}
+  .btn-reactivo.f3{border-color:var(--c3-bd);background:var(--c3-bg)} .btn-reactivo.f3::after{background:var(--c3-dot)}
+  .btn-reactivo.f4{border-color:var(--c4-bd);background:var(--c4-bg)} .btn-reactivo.f4::after{background:var(--c4-dot)}
+  .btn-reactivo.f5{border-color:var(--c5-bd);background:var(--c5-bg)} .btn-reactivo.f5::after{background:var(--c5-dot)}
+  .btn-reactivo.f6{border-color:var(--c6-bd);background:var(--c6-bg)} .btn-reactivo.f6::after{background:var(--c6-dot)}
+
+  .btn-reactivo.active { outline: 2.5px solid var(--dark-blue); outline-offset: 1px; }
+  .btn-reactivo.dimmed { opacity: .28; }
+
+  .rname { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+  .rsub  { font-size: 10px; color: var(--muted); line-height: 1.3; }
+
+  /* Run button */
+  .run-wrap { margin-top: 1.4rem; }
+  .run-btn { width:100%; padding:13px; background:var(--dark-blue); color:#fff; border:none; border-radius:var(--radius); font-size:15px; font-weight:600; cursor:pointer; transition: background .15s, transform .1s; -webkit-tap-highlight-color:transparent; }
+  .run-btn:hover  { background: #254d8f; }
+  .run-btn:active { transform: scale(.99); }
+  .run-btn:disabled { background:#AABBCC; cursor:default; transform:none; }
+
+  /* Tubes */
+  .tube-zone { display:flex; align-items:flex-end; justify-content:center; gap:2.5rem; margin:1.75rem 0 1rem; }
+  .tube-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .tube-label { font-size:11px; color:var(--muted); text-align:center; max-width:90px; line-height:1.4; font-weight:500; }
+  .arrow-icon { font-size:28px; color:#AAAAAA; padding-bottom:45px; line-height:1; }
+
+  /* Result */
+  .result-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-top:.5rem; }
+  .result-empty { text-align:center; color:var(--muted); font-size:14px; padding:1.5rem 0; line-height:1.7; }
+  .result-status { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:10px; }
+  .status-pos { background:var(--green-bg); color:var(--green-text); }
+  .status-neg { background:var(--red-bg);   color:var(--red-text); }
+  .result-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; line-height:1.35; }
+  .result-body  { font-size:13.5px; color:var(--muted); line-height:1.65; margin-bottom:10px; }
+  .reaction-eq  { background:#F8F8F8; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; font-family:"Courier New",monospace; font-size:12px; color:var(--text); margin-bottom:12px; overflow-x:auto; white-space:nowrap; }
+  .vet-section  { border-top:1.5px solid var(--border); padding-top:12px; margin-top:4px; }
+  .vet-badge    { display:inline-block; background:var(--orange); color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:8px; letter-spacing:.03em; }
+  .vet-text     { font-size:13px; color:var(--text); line-height:1.65; }
+
+  footer { text-align:center; padding:1.5rem 1rem 2rem; font-size:11px; color:#AAAAAA; line-height:1.7; }
+
+  @keyframes rise { 0%{transform:translateY(0) scale(1);opacity:.7} 100%{transform:translateY(-55px) scale(.5);opacity:0} }
+  .bubble { animation: rise 1.4s ease-in infinite; }
+  .bubble:nth-child(2){animation-delay:.35s} .bubble:nth-child(3){animation-delay:.7s} .bubble:nth-child(4){animation-delay:1.05s}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbadge">CBI 103 · UDLA</div>
+  <div>
+    <h1>Simulador de Grupos Funcionales</h1>
+    <p>Prelaboratorio · Reconocimiento de grupos funcionales</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="legend">
+    <div class="legend-title">Código de colores — pares muestra / reactivo</div>
+    <div class="legend-grid" id="legend-grid"></div>
+  </div>
+
+  <div class="step-label" style="margin-top:.5rem;">
+    <div class="step-num">1</div>
+    <div class="step-text">Elige una muestra</div>
+  </div>
+  <div class="sample-grid" id="sample-grid"></div>
+
+  <div class="step-label">
+    <div class="step-num">2</div>
+    <div class="step-text">Elige un reactivo</div>
+  </div>
+  <div class="reactivo-grid" id="reactivo-grid"></div>
+
+  <div class="run-wrap">
+    <button class="run-btn" id="run-btn" disabled>Realizar reacción</button>
+  </div>
+
+  <div class="tube-zone" id="tube-zone" style="display:none;">
+    <div class="tube-wrap">
+      <svg width="64" height="148" viewBox="0 0 64 148" id="tube-before"></svg>
+      <div class="tube-label" id="lbl-before">—</div>
+    </div>
+    <div class="arrow-icon">→</div>
+    <div class="tube-wrap">
+      <svg width="64" height="148" viewBox="0 0 64 148" id="tube-after"></svg>
+      <div class="tube-label" id="lbl-after">—</div>
+    </div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-empty">Selecciona una muestra y un reactivo<br>para simular la reacción</div>
+  </div>
+
+</div>
+
+<footer>
+  Simulador educativo · CBI 103 Bases de Ciencias Biológicas y Químicas para Veterinaria<br>
+  Instituto de Ciencias Naturales · Universidad de las Américas
+</footer>
+
+<script>
+const FAMILIES = [
+  {id:1, name:"Ácidos carboxílicos", color:"#E87722"},
+  {id:2, name:"Aldehídos",           color:"#F5A800"},
+  {id:3, name:"Fenoles",             color:"#8B3DC8"},
+  {id:4, name:"Alcoholes",           color:"#2563EB"},
+  {id:5, name:"Carbohidratos",       color:"#16A34A"},
+  {id:6, name:"Proteínas",           color:"#C026D3"},
+  {id:0, name:"Control negativo",    color:"#AAAAAA"},
+];
+
+const SAMPLES = [
+  {id:"acido_acetico", name:"Ácido acético",  sub:"Vinagre · RCOOH",       fam:1, liqColor:"#f5f5dc"},
+  {id:"glucosa",       name:"Glucosa",         sub:"Azúcar simple · R-CHO", fam:2, liqColor:"#fffde7"},
+  {id:"fenol",         name:"Fenol / Timol",   sub:"Desinfectante · Ar-OH", fam:3, liqColor:"#f3f3f3"},
+  {id:"etanol",        name:"Etanol 1°",       sub:"Antiséptico · ROH 1°",  fam:4, liqColor:"#f0f8ff"},
+  {id:"propanol2",     name:"2-Propanol 2°",   sub:"Isopropanol · ROH 2°",  fam:4, liqColor:"#f0f8ff"},
+  {id:"tbutanol",      name:"tert-Butanol 3°", sub:"ROH 3°",               fam:4, liqColor:"#f0f8ff"},
+  {id:"almidon",       name:"Almidón",         sub:"Polisacárido",          fam:5, liqColor:"#fafaf0"},
+  {id:"proteina",      name:"Albúmina sérica", sub:"Proteína · amida",      fam:6, liqColor:"#fffaf0"},
+  {id:"agua",          name:"Agua destilada",  sub:"Control negativo",      fam:0, liqColor:"#e8f4fd"},
+];
+
+const REACTIVOS = [
+  {id:"nahco3",  name:"NaHCO₃ 5%",     sub:"Bicarbonato de sodio", fam:1},
+  {id:"fehling", name:"Fehling",        sub:"Cu²⁺ / NaOH",         fam:2},
+  {id:"fecl3",   name:"FeCl₃ 5%",      sub:"Cloruro férrico",      fam:3},
+  {id:"kmno4",   name:"KMnO₄",         sub:"Permanganato de K⁺",   fam:4},
+  {id:"lugol",   name:"Lugol (I₂/KI)", sub:"Yodo-yoduro",          fam:5},
+  {id:"biuret",  name:"Biuret",        sub:"CuSO₄ / NaOH",        fam:6},
+];
+
+const REACTIONS = {
+  "acido_acetico+nahco3":{positive:true,beforeColor:"#f5f5dc",afterColor:"#f5f5dc",bubbles:true,
+    title:"Reacción positiva — liberación de CO₂",
+    desc:"El ácido acético reacciona con el bicarbonato produciendo burbujas visibles de CO₂. La solución burbujea activamente.",
+    eq:"CH₃COOH + NaHCO₃  →  CH₃COONa + CO₂↑ + H₂O",
+    vet:"El ácido láctico (también ácido carboxílico) se acumula en músculos de caballos de carrera durante ejercicio intenso. Los tampones bicarbonato en sangre neutralizan la acidosis metabólica — exactamente la misma reacción que ves aquí."},
+  "glucosa+fehling":{positive:true,beforeColor:"#4A90D9",afterColor:"#C0392B",bubbles:false,
+    title:"Reacción positiva — precipitado rojo (Cu₂O)",
+    desc:"La glucosa reduce el Cu²⁺ azul del reactivo de Fehling a Cu⁺, formando óxido cuproso (Cu₂O) de color rojo ladrillo.",
+    eq:"R-CHO + 2 Cu²⁺ + NaOH  →  R-COOH + Cu₂O↓ (rojo)",
+    vet:"Diagnóstico de diabetes mellitus en perros y gatos: la glucosuria se detecta con tiras reactivas basadas en este principio. Una glucemia > 180 mg/dL supera el umbral renal y aparece glucosa en orina."},
+  "fenol+fecl3":{positive:true,beforeColor:"#e8e8e8",afterColor:"#6a0dad",bubbles:false,
+    title:"Reacción positiva — coloración violeta intensa",
+    desc:"El fenol forma un complejo metálico coloreado con el Fe³⁺. El color varía de violeta a azul-verde según el compuesto fenólico.",
+    eq:"6 Ar-OH + FeCl₃  →  [Fe(OAr)₆]³⁻ + 3 H₃O⁺ + 3 Cl⁻",
+    vet:"El timol y el eugenol (fenoles del tomillo y el clavo) son antisépticos usados en pequeñas especies. ¡Atención! Los desinfectantes con fenol (Dettol®, creolina) son letales para gatos, que carecen de la enzima para metabolizarlos."},
+  "etanol+kmno4":{positive:true,beforeColor:"#8e44ad",afterColor:"#7B5E3A",bubbles:false,
+    title:"Reacción positiva — decoloración y precipitado café",
+    desc:"El etanol (alcohol 1°) reduce el KMnO₄ morado. El manganeso se reduce a MnO₂, que precipita de color café-negro.",
+    eq:"ROH (1°) + KMnO₄  →  RCOOH + MnO₂↓ (café)",
+    vet:"El etanol 70% es el antiséptico más usado en veterinaria. Su oxidación progresiva explica por qué soluciones muy diluidas son menos efectivas. El hígado sigue la misma ruta oxidativa para metabolizarlo."},
+  "propanol2+kmno4":{positive:true,beforeColor:"#8e44ad",afterColor:"#7B5E3A",bubbles:false,
+    title:"Reacción positiva — decoloración y precipitado café",
+    desc:"El alcohol secundario se oxida con KMnO₄ produciendo una cetona y el precipitado café de MnO₂.",
+    eq:"ROH (2°) + KMnO₄  →  RCOR' + MnO₂↓ (café)",
+    vet:"El isopropanol se metaboliza a acetona (cetona) en el hígado. Eso explica el 'aliento a acetona' en cetoacidosis diabética felina y en intoxicaciones por isopropanol en perros."},
+  "tbutanol+kmno4":{positive:false,beforeColor:"#8e44ad",afterColor:"#8e44ad",bubbles:false,
+    title:"Reacción negativa — sin cambio de color",
+    desc:"El alcohol terciario NO se oxida con KMnO₄. El carbono unido al –OH no tiene hidrógenos disponibles. El color morado permanece.",
+    eq:"ROH (3°) + KMnO₄  →  Sin reacción (morado persiste)",
+    vet:"Las alcohol deshidrogenasas hepáticas tampoco pueden oxidar alcoholes terciarios — la misma razón química. Esto explica diferencias en metabolismo y toxicidad de distintos alcoholes en animales."},
+  "almidon+lugol":{positive:true,beforeColor:"#c8a020",afterColor:"#1a237e",bubbles:false,
+    title:"Reacción positiva — coloración azul-violeta intensa",
+    desc:"El yodo del Lugol se intercala en las hélices de amilosa del almidón, formando un complejo de transferencia de carga azul-violeta.",
+    eq:"Almidón (amilosa) + I₂  →  Complejo almidón-yodo (azul)",
+    vet:"El test de Lugol detecta almidón en contenido gástrico de rumiantes con acidosis ruminal. También evalúa digestibilidad del almidón en dietas de bovinos y équidos de alto rendimiento."},
+  "proteina+biuret":{positive:true,beforeColor:"#d4b896",afterColor:"#7b1fa2",bubbles:false,
+    title:"Reacción positiva — coloración violeta (complejo Cu-proteína)",
+    desc:"Los enlaces peptídicos (–CO–NH–) reaccionan con Cu²⁺ en medio alcalino formando un complejo quelado de color violeta.",
+    eq:"-CO-NH- + Cu²⁺ + NaOH  →  Complejo violeta [Cu-péptido]",
+    vet:"La hipoalbuminemia (baja albúmina sérica) es frecuente en hepatopatías, nefropatías y malnutrición en bovinos. El análisis colorimétrico de proteínas séricas basado en Biuret es rutina clínica veterinaria."},
+  "agua+nahco3": {positive:false,beforeColor:"#e8f4fd",afterColor:"#e8f4fd",bubbles:false,title:"Sin reacción — control negativo",desc:"El agua no contiene grupo ácido carboxílico. No hay producción de CO₂ ni burbujas.",eq:"H₂O + NaHCO₃  →  Sin reacción",vet:null},
+  "agua+fehling":{positive:false,beforeColor:"#4A90D9",afterColor:"#4A90D9",bubbles:false,title:"Sin reacción — control negativo",desc:"El agua no tiene grupo aldehído reductor. El azul del Fehling permanece sin cambio.",eq:"H₂O + Fehling  →  Sin reacción",vet:null},
+  "agua+fecl3":  {positive:false,beforeColor:"#e8f4fd",afterColor:"#e8d060",bubbles:false,title:"Sin reacción significativa",desc:"El FeCl₃ disuelto produce leve color amarillo sin formación de complejo fenólico.",eq:"H₂O + FeCl₃  →  Leve color amarillo (sin fenol)",vet:null},
+  "agua+kmno4":  {positive:false,beforeColor:"#8e44ad",afterColor:"#8e44ad",bubbles:false,title:"Sin reacción — control negativo",desc:"El agua no reduce el permanganato. El color morado permanece inalterado.",eq:"H₂O + KMnO₄  →  Sin reacción",vet:null},
+  "agua+lugol":  {positive:false,beforeColor:"#c8a020",afterColor:"#c8a020",bubbles:false,title:"Sin reacción — control negativo",desc:"Sin almidón el Lugol mantiene su color ámbar-marrón característico.",eq:"H₂O + I₂/KI  →  Sin reacción (color ámbar)",vet:null},
+  "agua+biuret": {positive:false,beforeColor:"#e8f4fd",afterColor:"#6db6e8",bubbles:false,title:"Sin reacción — control negativo",desc:"Sin enlaces peptídicos el reactivo de Biuret mantiene su color azul pálido.",eq:"H₂O + Biuret  →  Sin reacción (azul pálido)",vet:null},
+};
+
+let selSample = null, selReactivo = null;
+
+function renderLegend() {
+  const g = document.getElementById("legend-grid");
+  FAMILIES.forEach(f => {
+    const d = document.createElement("div");
+    d.className = "legend-item";
+    d.innerHTML = `<span class="ldot" style="background:${f.color}"></span><span>${f.name}</span>`;
+    g.appendChild(d);
+  });
+}
+
+function renderSamples() {
+  const g = document.getElementById("sample-grid");
+  g.innerHTML = "";
+  const activeFam = selReactivo ? (REACTIVOS.find(r=>r.id===selReactivo)?.fam ?? null) : null;
+  SAMPLES.forEach(s => {
+    const b = document.createElement("button");
+    const dimmed = activeFam !== null && s.fam !== 0 && s.fam !== activeFam && selSample !== s.id;
+    b.className = ["btn-sample", s.fam ? `f${s.fam}` : "", selSample===s.id?"active":"", dimmed?"dimmed":""].filter(Boolean).join(" ");
+    b.innerHTML = `<div class="sname">${s.name}</div><div class="ssub">${s.sub}</div>`;
+    b.onclick = () => { selSample = s.id; renderSamples(); renderReactivos(); updateBtn(); };
+    g.appendChild(b);
+  });
+}
+
+function renderReactivos() {
+  const g = document.getElementById("reactivo-grid");
+  g.innerHTML = "";
+  const activeFam = selSample ? (SAMPLES.find(s=>s.id===selSample)?.fam ?? null) : null;
+  REACTIVOS.forEach(r => {
+    const b = document.createElement("button");
+    const dimmed = activeFam !== null && activeFam !== 0 && r.fam !== activeFam && selReactivo !== r.id;
+    b.className = ["btn-reactivo", `f${r.fam}`, selReactivo===r.id?"active":"", dimmed?"dimmed":""].filter(Boolean).join(" ");
+    b.innerHTML = `<div class="rname">${r.name}</div><div class="rsub">${r.sub}</div>`;
+    b.onclick = () => { selReactivo = r.id; renderReactivos(); renderSamples(); updateBtn(); };
+    g.appendChild(b);
+  });
+}
+
+function updateBtn() {
+  document.getElementById("run-btn").disabled = !(selSample && selReactivo);
+}
+
+function drawTube(svgEl, liqColor, showBubbles) {
+  const ns = "http://www.w3.org/2000/svg";
+  svgEl.innerHTML = "";
+  const uid = Math.random().toString(36).slice(2,8);
+  const defs = document.createElementNS(ns,"defs");
+  const clip = document.createElementNS(ns,"clipPath"); clip.setAttribute("id","c"+uid);
+  const cr = document.createElementNS(ns,"rect");
+  cr.setAttribute("x","10");cr.setAttribute("y","8");cr.setAttribute("width","44");cr.setAttribute("height","128");cr.setAttribute("rx","22");
+  clip.appendChild(cr); defs.appendChild(clip); svgEl.appendChild(defs);
+
+  const liq = document.createElementNS(ns,"rect");
+  liq.setAttribute("x","10");liq.setAttribute("y","45");liq.setAttribute("width","44");liq.setAttribute("height","91");
+  liq.setAttribute("fill",liqColor); liq.setAttribute("clip-path","url(#c"+uid+")");
+  svgEl.appendChild(liq);
+
+  if (showBubbles) {
+    [[22,105],[34,95],[28,115],[38,108],[20,120]].forEach(([cx,cy],i)=>{
+      const c=document.createElementNS(ns,"circle");
+      c.setAttribute("cx",cx);c.setAttribute("cy",cy);c.setAttribute("r","3.5");
+      c.setAttribute("fill","rgba(255,255,255,0.75)");c.setAttribute("clip-path","url(#c"+uid+")");
+      c.classList.add("bubble"); c.style.animationDelay=(i*.32)+"s";
+      svgEl.appendChild(c);
+    });
+  }
+
+  const glass=document.createElementNS(ns,"rect");
+  glass.setAttribute("x","10");glass.setAttribute("y","8");glass.setAttribute("width","44");glass.setAttribute("height","128");glass.setAttribute("rx","22");
+  glass.setAttribute("fill","none");glass.setAttribute("stroke","#AAAAAA");glass.setAttribute("stroke-width","1.5");
+  svgEl.appendChild(glass);
+
+  const sheen=document.createElementNS(ns,"rect");
+  sheen.setAttribute("x","14");sheen.setAttribute("y","14");sheen.setAttribute("width","9");sheen.setAttribute("height","100");sheen.setAttribute("rx","4");
+  sheen.setAttribute("fill","rgba(255,255,255,0.35)"); sheen.setAttribute("clip-path","url(#c"+uid+")");
+  svgEl.appendChild(sheen);
+}
+
+document.getElementById("run-btn").onclick = function() {
+  const key = selSample+"+"+selReactivo;
+  const rxn  = REACTIONS[key];
+  const sObj = SAMPLES.find(s=>s.id===selSample);
+  const rObj = REACTIVOS.find(r=>r.id===selReactivo);
+
+  document.getElementById("tube-zone").style.display = "flex";
+  const bc = rxn ? rxn.beforeColor : (sObj?.liqColor||"#e0e0e0");
+  drawTube(document.getElementById("tube-before"), bc, false);
+  drawTube(document.getElementById("tube-after"), rxn?rxn.afterColor:bc, rxn?rxn.bubbles:false);
+  document.getElementById("lbl-before").textContent = sObj?.name||"—";
+  document.getElementById("lbl-after").textContent  = "Con "+(rObj?.name||"—");
+
+  const rc = document.getElementById("result-card");
+  if (!rxn) {
+    rc.innerHTML = `<div class="result-title">Combinación no registrada</div><div class="result-body">Esta combinación no corresponde a los ensayos del prelaboratorio. Usa el código de colores para elegir el reactivo específico de cada grupo funcional.</div>`;
+    return;
+  }
+  rc.innerHTML = `
+    <div class="result-status ${rxn.positive?"status-pos":"status-neg"}">${rxn.positive?"● Positivo":"○ Negativo"}</div>
+    <div class="result-title">${rxn.title}</div>
+    <div class="result-body">${rxn.desc}</div>
+    <div class="reaction-eq">${rxn.eq}</div>
+    ${rxn.vet?`<div class="vet-section"><div class="vet-badge">Aplicación Veterinaria</div><div class="vet-text">${rxn.vet}</div></div>`:""}
+  `;
+};
+
+renderLegend();
+renderSamples();
+renderReactivos();
+</script>
+</body>
+</html>
